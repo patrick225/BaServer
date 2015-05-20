@@ -1,11 +1,10 @@
-import java.net.DatagramPacket;
+package connection;
 
 
 public abstract class OnMessageReceived {
 
-	protected TCPServer toRobot;
-	public OnMessageReceived(TCPServer toRobot) {
-		this.toRobot = toRobot;
+	protected TCPConnector toRobot;
+	public OnMessageReceived() {
 		
 	}
 	
