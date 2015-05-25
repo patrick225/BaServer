@@ -1,8 +1,11 @@
 package connection;
 
-import java.net.Socket;
+import java.util.HashMap;
+
 
 public class ConnectionManager {
+	
+	private static ConnectionManager instance = null;
 
 	public static final int STATE_CONNECTED = 1;
 	public static final int STATE_DISCONNECTED = 2;
@@ -21,10 +24,22 @@ public class ConnectionManager {
 	private Channel controller2Channel;
 	private Channel robot1Channel;
 	private Channel robot2Channel;
+	
+	private OnPlayerReady playerReadyListener;
+	private boolean player1Ready = false;
+	private boolean player2Ready = false;
+	
 
 	public ConnectionManager() {
 
 		initTcp();
+	}
+	
+	public static ConnectionManager getInstance() {
+		if (instance == null) {
+			instance = new ConnectionManager();
+		}
+		return instance;
 	}
 
 	private void initTcp() {
@@ -34,14 +49,19 @@ public class ConnectionManager {
 			public void stateChanged(Channel who, int state) {
 
 				if (state == STATE_CONNECTED) {
-					if (who == controller1Handler)
+					if (who == controller1Handler) {
 						controller1Channel = controller1Handler;
-					else if (who == controller2Handler)
+						
+					}
+					else if (who == controller2Handler) {
 						controller2Channel = controller2Handler;
-					else if (who == robot1Handler)
+					}
+					else if (who == robot1Handler) {
 						robot1Channel = robot1Handler;
-					else if (who == robot2Handler)
+					}
+					else if (who == robot2Handler) {
 						robot2Channel = robot2Handler;
+					}
 				} else {
 					if (who == controller1Handler) {
 						controller1Channel = null;
@@ -64,6 +84,7 @@ public class ConnectionManager {
 					}
 				}
 				printStatus();
+				checkForReadyPlayers();
 
 			}
 		};
@@ -79,6 +100,34 @@ public class ConnectionManager {
 		connectRobot.connectHandler(robot1Handler);
 		connectRobot.connectHandler(robot2Handler);
 	}
+	
+	public void registerPlayerReadyListener(OnPlayerReady playerListener) {
+		playerReadyListener = playerListener;
+	}
+	
+	private void checkForReadyPlayers() {
+		
+		// player1 was not ready, but is now
+		if (!player1Ready && getChannelClient1() != null && getChannelRobot1() != null) {
+			playerReadyListener.playerIsReady(1, true);
+		}
+		
+		// player1 was ready, but is no more
+		if (player1Ready && !(getChannelClient1() != null && getChannelRobot1() != null)) {
+			playerReadyListener.playerIsReady(1, false);
+		}
+		
+		// player2 was not ready, but is now
+		if (!player2Ready && getChannelClient2() != null && getChannelRobot2() != null) {
+			playerReadyListener.playerIsReady(2, true);
+		}
+		
+		// player2 was ready, but is no more
+		if (player2Ready && !(getChannelClient2() != null && getChannelRobot2() != null)) {
+			playerReadyListener.playerIsReady(2, false);
+		}
+		
+	}
 
 	private void printStatus() {
 
@@ -92,5 +141,22 @@ public class ConnectionManager {
 		System.out.println("Robot2: " + String.valueOf(robot2Channel != null));
 		System.out.println("------------------");
 
+	}
+	
+	
+	public Channel getChannelClient1() {
+		return controller1Channel;
+	}
+	
+	public Channel getChannelClient2() {
+		return controller2Channel;
+	}
+	
+	public Channel getChannelRobot1() {
+		return robot1Channel;
+	}
+	
+	public Channel getChannelRobot2() {
+		return robot2Channel;
 	}
 }

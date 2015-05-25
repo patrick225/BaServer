@@ -1,10 +1,14 @@
+import connection.Channel;
 import connection.ConnectionManager;
+import connection.OnMessageReceived;
 
 
 
 public class Main {
 	
 
+	private Channel channelClient1;
+	private Channel channelRobot1;
 
 	/**
 	 * @param args
@@ -12,9 +16,8 @@ public class Main {
 	public static void main(String[] args) {
 		
 		
-		ConnectionManager cm = new ConnectionManager();
-		
-		
+
+		Game game = new Game();
 
 		
 	}

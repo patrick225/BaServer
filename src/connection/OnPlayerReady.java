@@ -2,5 +2,5 @@ package connection;
 
 public interface OnPlayerReady {
 
-	public void playerIsReady(Channel client, Channel robot);
+	public void playerIsReady(int player, boolean state);
 }

@@ -27,9 +27,14 @@ public class TCPConnectionHandler implements Channel {
 	}
 
 	
-	
+	@Override
 	public void registerMessageListener(OnMessageReceived messageListener) {
 		this.messageListener = messageListener;
+	}
+	
+	@Override
+	public void unregisterMessageListener() {
+		this.messageListener = null;
 	}
 	
 	@Override
