@@ -15,9 +15,15 @@ public class TCPConnectionHandler implements Channel {
 	private boolean running = false;
 	
 	protected OnMessageReceived messageListener;
+	private StateListener stateListener;
 	
-	public TCPConnectionHandler(Socket socket) {
-		this.socket = socket;		 
+	public TCPConnectionHandler(StateListener stateListener) {
+		this.stateListener = stateListener;
+	}
+	
+	public void setSocket (Socket socket) {
+		this.socket = socket;
+		new Thread(this).start();
 	}
 
 	
@@ -36,18 +42,19 @@ public class TCPConnectionHandler implements Channel {
 				out.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
-				System.exit(0);
 			}
 		}
 	}
 	
 	
-	
-
-	
 	@Override
 	public void close() {
 		running = false;
+		try {
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -61,13 +68,13 @@ public class TCPConnectionHandler implements Channel {
 			 
 			 out = socket.getOutputStream();
 			 
+			 stateListener.stateChanged(this, ConnectionManager.STATE_CONNECTED);
+			 
 			 byte[] pack = new byte[PACKETSIZE];
-			 while (running) {
-				 if (in.available() > 0) {
-					 in.read(pack, 0, PACKETSIZE);
-					 if (pack.length != 0 && messageListener != null) {
-						 messageListener.messageReceived(pack);
-					 }
+			 while (running && in.read(pack, 0, PACKETSIZE) != -1) {
+				 
+				 if (pack.length != 0 && messageListener != null) {
+					 messageListener.messageReceived(pack);
 				 }
 			 }
 			 
@@ -77,6 +84,7 @@ public class TCPConnectionHandler implements Channel {
 			 try {
 				 System.out.println("Close socket!");
 				socket.close();
+				stateListener.stateChanged(this, ConnectionManager.STATE_DISCONNECTED);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
