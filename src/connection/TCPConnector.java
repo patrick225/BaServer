@@ -1,4 +1,5 @@
 package connection;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -9,10 +10,10 @@ public class TCPConnector extends Thread {
 	public static final int PORT_ROBOT = 44044;
 	
 	private ConnectionListener connectionListener;
-	
-	private int connectedClients = 0; 
-	
+		
 	private int port;
+	
+	private ServerSocket serverSocket;
 		
 	
 	public TCPConnector(int port, ConnectionListener conListner) {
@@ -24,25 +25,32 @@ public class TCPConnector extends Thread {
 		start();
 	}
 	
+	public void close () {
+		try {
+			serverSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	@Override
 	public void run() {
 		super.run();
 				
 		 try {			 		
-			 ServerSocket serverSocket = new ServerSocket(port);
+			 serverSocket = new ServerSocket(port);
 			
-			 while (connectedClients < ConnectionManager.NUMBER_OF_CONNECTIONS) {
+			 while (true) {
 				 System.out.println(port + ": Waiting for Device...");
 				 Socket client = serverSocket.accept();
 				 System.out.println(port + ": Connected with Device!");
 				 connectionListener.newConnection(client);
 			 }
-			 
-			 serverSocket.close();
-			 			 
-		 } catch (Exception e) {
-			 System.out.println(port + ": Error");
-			 e.printStackTrace();
+			 			 			 
+		 } 
+		 catch (Exception e) {
+
+			 System.out.println("Socket was closed!");
 		 } 
 		
 		

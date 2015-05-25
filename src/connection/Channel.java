@@ -1,10 +1,8 @@
 package connection;
 
-public abstract class Channel extends Thread {
+public interface Channel extends Runnable {
 
-	
-	
-	public abstract void sendMessage(byte[] data);
-	public abstract void close();
-	public abstract void run();
+	public void registerMessageListener(OnMessageReceived messageListener);
+	public void sendMessage(byte[] data);
+	public void close();
 }

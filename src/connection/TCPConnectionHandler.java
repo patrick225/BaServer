@@ -5,25 +5,26 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 
-public class TCPConnectionHandler extends Channel{
+public class TCPConnectionHandler implements Channel {
 
 	
 	OutputStream out;
 	private static final int PACKETSIZE = 3;
 	
 	private Socket socket;
-	private OnMessageReceived messageListener;
 	private boolean running = false;
+	
+	protected OnMessageReceived messageListener;
 	
 	public TCPConnectionHandler(Socket socket) {
 		this.socket = socket;		 
 	}
 
+	
+	
 	public void registerMessageListener(OnMessageReceived messageListener) {
 		this.messageListener = messageListener;
 	}
-	
-	
 	
 	@Override
 	public void sendMessage(byte[] data) {
@@ -35,9 +36,12 @@ public class TCPConnectionHandler extends Channel{
 				out.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
+				System.exit(0);
 			}
 		}
 	}
+	
+	
 	
 
 	
@@ -48,7 +52,9 @@ public class TCPConnectionHandler extends Channel{
 
 	@Override
 	public void run() {
+		
 		running = true;
+		System.out.println("thread started");
 
 		try {
 			 DataInputStream in = new DataInputStream(socket.getInputStream());
@@ -69,6 +75,7 @@ public class TCPConnectionHandler extends Channel{
 			 e.printStackTrace();
 		 } finally {
 			 try {
+				 System.out.println("Close socket!");
 				socket.close();
 			} catch (IOException e) {
 				e.printStackTrace();

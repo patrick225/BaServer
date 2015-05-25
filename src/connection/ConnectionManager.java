@@ -4,71 +4,118 @@ import java.net.Socket;
 
 public class ConnectionManager {
 			
-	public static final int NUMBER_OF_CONNECTIONS = 2;
+	private OnPlayerReady playerReadyListener;
 	
-	Socket[] tcpClientPlayers = new Socket[NUMBER_OF_CONNECTIONS];
-	Socket[] tcpRobotPlayers = new Socket[NUMBER_OF_CONNECTIONS];
+	private Socket tcpClientPlayer1;
+	private Socket tcpRobotPlayer1;
+	
+	private Socket tcpClientPlayer2;
+	private Socket tcpRobotPlayer2;
+	
+	private int tcpClientCount = 0;
+	private int tcpRobotCount = 0;
+	
+	private TCPConnector connectorClient;
+	private TCPConnector connectorRobot;
 		
 
-	public ConnectionManager() {
+	public ConnectionManager(OnPlayerReady playerReadyListener) {
 		
-		new TCPConnector(TCPConnector.PORT_CLIENT, 
+		this.playerReadyListener = playerReadyListener;
+		
+		connectorClient = new TCPConnector(TCPConnector.PORT_CLIENT, 
 				new ConnectionListener() {
 					
 					@Override
 					public void newConnection(Socket socket) {
-
-						if (tcpClientPlayers[0] != null) {
-							tcpClientPlayers[0] = socket;
+						
+						if (tcpClientCount == 0) {
+							tcpClientPlayer1 = socket;
+							System.out.println("Client Player 1 connected!");
+							playerReady();
+							tcpClientCount++;
 						} else {
-							tcpClientPlayers[1] = socket;
+							tcpClientPlayer2 = socket;
+							System.out.println("Client Player 2 connected!");
+							closeTcpConnector("client");
+							playerReady();
+							System.out.println("All Clients connected!");
 						}
 						
 					}
 				});
 		
-		new TCPConnector(TCPConnector.PORT_ROBOT,
+		connectorRobot = new TCPConnector(TCPConnector.PORT_ROBOT,
 				new ConnectionListener() {
 					
 					@Override
 					public void newConnection(Socket socket) {
 						
-						if (tcpRobotPlayers[0] != null) {
-							tcpRobotPlayers[0] = socket;
+						if (tcpRobotCount == 0) {
+							tcpRobotPlayer1 = socket;
+							System.out.println("Robot Player 1 connected!");
+							playerReady();
+							tcpRobotCount++;
 						} else {
-							tcpRobotPlayers[1] = socket;
-						}						
+							tcpRobotPlayer2 = socket;
+							System.out.println("Robot Player 2 connected!");
+							closeTcpConnector("robot");
+							playerReady();
+							System.out.println("All Robots connected!");
+						}
 					}
 				});
+
 		
 		
 	}
 	
-	public boolean isPlayer1Ready() {
-		
-		// TODO spaeter erst ready wenn auch robot verbunden ist
-		if (tcpClientPlayers[0] != null) {
-			return true;
-		}
-		return false;
+	private void closeTcpConnector(String which) {
+		if (which.equals("client"))
+			connectorClient.close();
+		if (which.equals("robot"))
+			connectorRobot.close();
 	}
 	
-	public Channel getClientChannelPlayer1() {	
+	
+	static boolean player1Triggered = false;
+	static boolean player2Triggered = false;
+	private void playerReady() {
 		
-		if (tcpClientPlayers[0] != null) {
-			return new TCPConnectionHandler(tcpClientPlayers[0]);
+		if (tcpClientPlayer1 != null && tcpRobotPlayer1 != null && !player1Triggered) {
+			playerReadyListener.playerIsReady(getChannel("client1"), getChannel("robot1"));
+			System.out.println("player 1 triggered");
+			player1Triggered = true;
 		}
-		
-		return null;
+		if (tcpClientPlayer2 != null && tcpRobotPlayer2 != null && !player2Triggered) {
+			playerReadyListener.playerIsReady(getChannel("client2"), getChannel("robot2"));
+			System.out.println("player 2 triggered");
+			player2Triggered = true;
+		}
 	}
 	
-	public Channel getRobotChannelPlayer1() {
+	public Channel getChannel(String from) {
 		
-		if (tcpRobotPlayers[0] != null) {
-			return new TCPConnectionHandler(tcpRobotPlayers[0]);
+		Channel channel = null;
+		
+		if (from.equals("client1")) {
+			if (tcpClientPlayer1 != null)
+				channel = new TCPConnectionHandler(tcpClientPlayer1);
+			
+		} else if (from.equals("client2")) {
+			if (tcpClientPlayer2 != null)
+				channel = new TCPConnectionHandler(tcpClientPlayer2);
+			
+		} else if (from.equals("robot1")) {
+			if (tcpRobotPlayer1 != null)
+				channel = new TCPConnectionHandler(tcpRobotPlayer1);
+			
+		} else if (from.equals("robot2")) {
+			if (tcpRobotPlayer2 != null)
+				channel = new TCPConnectionHandler(tcpRobotPlayer2);
 		}
 		
-		return null;
+		return channel;
 	}
 
 }
