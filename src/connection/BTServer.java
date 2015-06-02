@@ -9,7 +9,7 @@ public class BTServer {
 	
 	
 	public BTServer() {
-		// TODO Auto-generated constructor stub
+
 		LocalDevice ld = null;
 		
 		StreamConnectionNotifier notifier;
